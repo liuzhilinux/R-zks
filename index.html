@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>R-zks</title>
+    <link rel="stylesheet" type="text/css" href="./css/common.css">
+    <link rel="stylesheet" type="text/css" href="./css/main.css">
+    <script>
+        ((target) => {
+            target.addEventListener('error', function (event) {
+                console.log(event);
+                console.log(event.error.stack);
+                alert(event.error.stack);
+            });
+        })(window);
+    </script>
+    <script src="/r/lib/fact.php?fn=base_config"></script>
+</head>
+<body>
+
+<div id="main-box">
+
+    <m-header :title="title" :is-c-q="isCQ" :is-s-a-q="isSAQ"
+              @on-back="handleOnUpperLevel" @on-show-menu="handleOnShowMenu"></m-header>
+
+    <h-b-menu :is-open="isShowMenu" :cur-id="curId" :cur-node="curNode" :list="list"
+              @on-close="handleOnMenuHide" @on-load="handleOnLoad"></h-b-menu>
+
+    <div id="subjects-box">
+        <div id="subjects-content" v-html="content" v-if="content"></div>
+
+        <sub-nodes-list v-else :list="subNodesList" @on-load="handleLoadSubNodes"></sub-nodes-list>
+
+        <div id="navigation-box">
+            <a href="javascript: void(0);" :class="{active: curPage && 1 !== curPage}" @click="handleOnPrev">
+                &lt; Prev
+            </a>
+            <p class="navigation-pagination">{{curPage}} / {{totalPage}}</p>
+            <a href="javascript: void(0);" :class="{active: totalPage !== curPage}" @click="handleOnNext">
+                Next &gt;
+            </a>
+        </div>
+    </div>
+
+    <star-loading :is-show="isShowLoading1 || isShowLoading2"></star-loading>
+
+    <login-box :is-show="isShowLoginBox" @login-success="handleLoginSuccess"></login-box>
+
+</div>
+
+<script src="./js/common.js"></script>
+<script src="./vendor/vue.min.js"></script>
+<!-- script src="./vendor/vue.js"></script -->
+<script src="./components/main.js"></script>
+<script src="./js/main.js"></script>
+
+</body>
+</html>

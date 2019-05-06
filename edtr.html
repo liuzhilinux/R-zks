@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>R-zks</title>
+    <link rel="stylesheet" type="text/css" href="./css/common.css">
+    <link rel="stylesheet" type="text/css" href="./vendor/iview/styles/iview.css">
+    <link rel="stylesheet" type="text/css" href="./css/edtr.css">
+    <script>
+        ((target) => {
+            target.addEventListener('error', function (event) {
+                console.log(event);
+                console.log(event.error.stack);
+                alert(event.error.stack);
+            });
+        })(window);
+    </script>
+    <script src="/r/lib/fact.php?fn=base_config"></script>
+</head>
+<body>
+
+<div id="main-box">
+
+    <pbx-main :id="curId" ref="nodesList" :parent-node-id="curParentNodeId"
+              @show-login-box="handleShowLoginBox" @add-new="handleAddNew"
+              @open-editor="handleOpenEditor" @show-transfer-box="handleShowTransferBox"
+              @on-refresh-list="handleOnRefreshList"></pbx-main>
+
+    <modal v-model="isShowLoginBox" title="Login" :mask-closable="false" :closable="false" width="360"
+           class-name="vertical-center-modal" :footer-hide="true" :styles="{top: 0}"><!-- width="520" -->
+        <i-form ref="loginForm" :model="loginFormData" :rules="loginFormRule">
+            <form-item prop="user">
+                <i-input type="text" v-model="loginFormData.user" placeholder="Username">
+                    <icon type="md-person" slot="prepend"></icon>
+                </i-input>
+            </form-item>
+            <form-item prop="pass">
+                <i-input type="password" v-model="loginFormData.pass" placeholder="Password"
+                         @keyup.enter.native="handleLogin">
+                    <icon type="md-lock" slot="prepend"></icon>
+                </i-input>
+            </form-item>
+            <form-item>
+                <i-button id="login-submit-btn" type="default" @click="handleLogin">Submit</i-button>
+            </form-item>
+        </i-form>
+    </modal>
+
+    <modal v-model="isShowTransferBox" title="Transfer To" fullscreen
+           @on-ok="handleOnInsertOk" @on-cancel="handleOnInsertCancel">
+        <tree :data="nodesTree" :load-data="handleLoadNodesTree" @on-select-change="handleOnSelectChange"></tree>
+    </modal>
+
+    <modal v-model="isShowEditor" title="Node Editor" id="node-editor" :mask-closable="false" :closable="false"
+           @on-ok="handleOnSubmitToAddNew" width="960" style="display: none">
+        <i-form ref="editorForm" :model="editorFormData" :rules="editorFormRule"
+                label-position="right" :label-width="120" @submit.native.prevent>
+            <form-item label="Node title: " label-for="eid-node_title" prop="node_title">
+                <i-input element-id="eid-node_title" v-model="editorFormData.node_title"
+                         placeholder="1 ~ 480 characters."></i-input>
+            </form-item>
+            <row :gutter="1">
+                <i-col :span="6">
+                    <form-item label="CQ: " label-for="eid-is_cq" prop="is_cq">
+                        <i-switch element-id="eid-is_cq" v-model="editorFormData.is_cq" size="large"
+                                  :true-value="1" :false-value="0">
+                            <span slot="close">No</span>
+                            <span slot="open">Yes</span>
+                        </i-switch>
+                    </form-item>
+                </i-col>
+                <i-col :span="6">
+                    <form-item label="SAQ: " label-for="eid-is_saq" prop="is_saq">
+                        <i-switch element-id="eid-is_saq" v-model="editorFormData.is_saq" size="large"
+                                  :true-value="1" :false-value="0">
+                            <span slot="close">No</span>
+                            <span slot="open">Yes</span>
+                        </i-switch>
+                    </form-item>
+                </i-col>
+                <i-col :span="4" :offset="8">
+                    <i-button long shape="circle" @click="handleOnClearSubjects">Clear subjects</i-button>
+                </i-col>
+            </row>
+        </i-form>
+        <textarea id="subjects-editor"></textarea>
+        <spin fix v-if="isShowEditorLoadingSpin">
+            <icon type="ios-loading" size=18 class="spin-icon-load"></icon>
+            <div>Loading</div>
+        </spin>
+        <template slot="footer" id="node-editor-footer">
+            <i-button type="text" size="large" @click="handleOnCancelToAddNew">Cancel</i-button>
+            <i-button type="primary" size="large" @click="handleOnSubmitToAddNew"
+                      :loading="isShowEditorOKBtnLoading">
+                OK
+            </i-button>
+        </template>
+    </modal>
+
+</div>
+
+<template id="pbx-main">
+    <div id="pbx">
+        <p id="pbx-title">Current: {{title}}</p>
+
+        <div id="pbx-btngrp">
+            <i-button shape="circle" icon="md-add" class="pbx-btn1" @click="addNew">Add New</i-button>
+            <i-button shape="circle" icon="md-return-left" class="pbx-btn2"
+                      @click="onReturnBack"></i-button>
+            <i-button shape="circle" icon="md-refresh" class="pbx-btn3"
+                      @click="refreshList(null)"></i-button>
+        </div>
+
+        <div id="pbx-ls">
+            <i-table size="small" :columns="columns" :data="list" :loading="isLoading"
+                     @on-row-dblclick="onTurnToNode">
+                <!-- template slot-scope="{column, row, index}" slot="num">
+                    {{1 + parseInt(index)}}
+                </template -->
+                <template slot-scope="{column, row, index}" slot="node_title">
+                    <div class="pbx-ntt" :title="row.node_title">{{row.node_title}}</div>
+                </template>
+                <template slot-scope="{column, row, index}" slot="is_cq">
+                    <input class="pbx-ckb" type="checkbox" :checked="1 === row.is_cq" @change="setCQ(row)">
+                </template>
+                <template slot-scope="{column, row, index}" slot="is_saq">
+                    <input class="pbx-ckb" type="checkbox" :checked="1 === row.is_saq" @change="setSAQ(row)">
+                </template>
+                <template slot-scope="{column, row, index}" slot="update_time">
+                    <i-time :time="row.update_time * 1000" type="datetime"/>
+                </template>
+                <template slot-scope="{column, row, index}" slot="create_time">
+                    <i-time :time="row.create_time * 1000" type="datetime"/>
+                </template>
+                <template slot-scope="{column, row, index}" slot="action">
+                    <i-button class="pbx-ls-action-btn" shape="circle"
+                              icon="md-open" @click="openEditor(row)"></i-button>
+                    <i-button class="pbx-ls-action-btn" shape="circle" :disabled="0 === index"
+                              icon="ios-arrow-up" @click="moveUp(index)"></i-button>
+                    <i-button class="pbx-ls-action-btn" shape="circle" :disabled="list.length === index + 1"
+                              icon="ios-arrow-down" @click="moveDown(index)"></i-button>
+                    <i-button class="pbx-ls-action-btn" shape="circle"
+                              icon="md-attach" @click="insertTo(row)"></i-button>
+                    <i-button class="pbx-ls-action-btn" shape="circle"
+                              icon="md-trash" @click="deleteItem(index)"></i-button>
+                </template>
+            </i-table>
+        </div>
+    </div>
+</template>
+
+<script src="./js/common.js"></script>
+<script src="./vendor/vue.min.js"></script>
+<!-- script src="./vendor/vue.js"></script -->
+<script src="./vendor/iview/iview.js"></script>
+<script src="./vendor/iview/locale/en-US.js"></script>
+<script src="./vendor/tinymce_4.9.2/tinymce.min.js"></script>
+<!-- script src="https://cdn.bootcss.com/tinymce/4.9.3/tinymce.min.js"></script -->
+<script src="./vendor/tinymce_4.9.2/toolbar.js"></script>
+<script src="./vendor/tinymce_4.9.2/plugins.js"></script>
+<script src="./js/edtr.js"></script>
+
+</body>
+</html>
