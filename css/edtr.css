@@ -1,0 +1,122 @@
+/*** *** *** *** *** *** *** *** *** *** *** *** *** *** ***/
+
+@media screen and (min-width: 1560px) {
+    #pbx {
+        width: 1280px;
+    }
+}
+
+@media screen  and (min-width: 1120px) and (max-width: 1560px) {
+    #pbx {
+        width: 768px;
+    }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1120px) {
+    #pbx {
+        width: 610px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #pbx {
+        width: 100%;
+    }
+}
+
+#main-box {
+    width: 100%;
+    position: relative;
+}
+
+#pbx {
+    margin: 0 auto;
+}
+
+#pbx-btngrp {
+    width: 100%;
+}
+
+#pbx-title {
+    height: 48px;
+    line-height: 48px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#pbx-ls {
+    margin: 24px 0;
+}
+
+.pbx-ntt {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.pbx-ckb {
+    width: 16px;
+    height: 16px;
+
+    margin-left: 4px;
+    margin-top: 5px;
+
+    /*
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: white;
+    border: solid #ccc 1px;
+    border-radius: 3px;
+    color: #333;
+    */
+    outline: none;
+}
+
+.vertical-center-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+#login-submit-btn {
+    float: right;
+}
+
+.pbx-btn1 {
+    margin-right: 12px;
+}
+
+.pbx-btn2 {
+
+}
+
+.pbx-btn3 {
+    float: right;
+}
+
+.pbx-ls-action-btn {
+    margin-right: 6px;
+}
+
+.spin-icon-load {
+    animation: ani-spin 1s linear infinite;
+}
+
+@keyframes ani-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#node-editor-footer {
+    text-align: right;
+}
